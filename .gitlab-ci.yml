@@ -1,0 +1,15 @@
+stages:
+  - build_image
+
+collector_job:
+    image: registry.xxxxxx.com/library/docker:latest
+    services:
+      - docker:dind
+    stage: build_image
+    script:
+     - TAG=`date +%y%m%d%H%M%S`
+     - echo TAG
+     - docker build ./ -t registry.xxxxxx.com/tdc/soarui:${TAG}
+     - docker login registry.xxxxxx.com --password="" --username=""
+     - docker push registry.xxxxxx.com/tdc/soarui:${TAG}
+     - echo "registry.xxxxxx.com/tdc/soarui:${TAG}"

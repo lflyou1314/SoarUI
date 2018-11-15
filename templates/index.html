@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>SoarUI - An open source user interface for SOAR</title>
+    <meta name="description" content="SoarUI"/>
+
+    <meta name="viewport" content="width=1000, initial-scale=1.0, maximum-scale=1.0">
+
+    <!-- Loading Bootstrap -->
+    <link href="{{ url_for('static',filename='css/bootstrap.min.css') }}" rel="stylesheet"/>
+    <!-- Loading Flat UI -->
+    <link href="{{ url_for('static',filename='css/flat-ui.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static',filename='favicon.ico') }}" rel="shortcut icon"/>
+
+    <link href="{{ url_for('static',filename='css/codemirror.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static',filename='css/darcula.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static',filename='css/show-hint.css') }}" rel="stylesheet"/>
+
+
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/jquery-1.7.min.js') }}"></script>
+    <!-- 引入CodeMirror核心文件 -->
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/codemirror.js') }}"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static',filename='scripts/javascript.js') }}"></script>
+    <!-- 下面分别为显示行数、括号匹配和全屏插件 -->
+    <script type="text/javascript"
+            src="{{ url_for('static',filename='scripts/active-line.js') }}"></script>
+    <script type="text/javascript"
+            src="{{ url_for('static',filename='scripts/matchbrackets.js') }}"></script>
+
+
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/show-hint.js') }}"></script>
+    <!--mysql高亮提示框-->
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/sql-hint.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static',filename='scripts/sql.js') }}"></script>
+
+</head>
+<body style="background-color: #3c3f41">
+<div style="width: 90%;margin: 0 auto">
+    <h1 class="demo-section-title">{{ content }}</h1>
+    <div class="row">
+        <div class="col">
+            <nav class="navbar navbar-inverse navbar-embossed navbar-expand-lg" role="navigation">
+                <a class="navbar-brand" href="#">SoarUI</a>
+
+                <div class="collapse navbar-collapse" id="navbar-collapse-01">
+                    <ul class="nav navbar-nav mr-auto">
+                        <li><a href="http://www.xinhuanet.com/">Xinhua News Agency</a></li>
+                        <li><a href="">China Economic Information Service</a></li>
+                        <li><a href="">Technology and Data Center</a></li>
+                        <li><a href="https://github.com/XiaoMi/soar/blob/master/doc/config.md">Data Source Name</a></li>
+                    </ul>
+                </div><!-- /.navbar-collapse -->
+            </nav><!-- /navbar -->
+        </div>
+    </div> <!-- /row -->
+</div>
+<div style="width: 90%;margin: 0 auto">
+    <div class="row">
+        <div class="col-10">
+            <div class="form-group">
+                <input type="text" value="" placeholder="请输入数据库DSN，格式：user:password@127.0.0.1:3307/database"
+                       id="dsn_url"
+                       class="form-control"/>
+            </div>
+        </div>
+        <div class="col">
+            <a href="javascript:void(0)" class="btn btn-block btn-lg btn-info"
+               id="connect">Connect</a>
+        </div>
+    </div> <!-- /row -->
+
+
+    <div class="row">
+        <div class="col">
+            <a href="javascript:void(0)" class="btn btn-block btn-lg btn-success" id="console" >Console</a>
+        </div>
+        <div class="col">
+            <a href="javascript:void(0)" class="btn btn-block btn-lg btn-info" id="score" >SQL评估</a>
+        </div>
+        <div class="col">
+            <a href="javascript:void(0)" class="btn btn-block btn-lg btn-info" id="beautify_sql" >美化</a>
+        </div>
+        <div class="col">
+            <a href="javascript:void(0)" class="btn btn-block btn-lg btn-info" >压缩</a>
+        </div>
+        <div class="col">
+            <a href="javascript:void(0)" class="btn btn-block btn-lg btn-info" id="fingerprint" >指纹</a>
+        </div>
+        <div class="col">
+            <a href="javascript:void(0)" class="btn btn-block btn-lg btn-info" id="syntax_check" >语法检查</a>
+        </div>
+        <div class="col">
+            <a href="javascript:void(0)" class="btn btn-block btn-lg btn-info" id="merge_alter_sql" >Alter合并</a>
+        </div>
+        <div class="col">
+            <a href="javascript:void(0)" class="btn btn-block btn-lg btn-info" >EXP解析</a>
+        </div>
+    </div><!-- /row -->
+
+    <br>
+    <div class="row">
+        <div class="col">
+            <textarea class="" id="sql" name="sql" style="display: none"></textarea>
+        </div>
+        <div class="col">
+            <textarea class="" id="result" name="result" style="display: none"></textarea>
+        </div>
+    </div> <!-- /tiles -->
+</div>
+
+<script>
+    var sql_editor = CodeMirror.fromTextArea(document.getElementById("sql"), {
+        lineNumbers: true,     // 显示行数
+        extraKeys: {"Tab": "autocomplete"},//输入s然后ctrl就可以弹出选择项
+        styleActiveLine: true, // 当前行背景高亮
+        mode: {name: "text/x-mysql"},
+        matchBrackets: true,
+        theme: "darcula",
+        lineWrapping:true,
+    });
+
+    sql_editor.setSize('100%', '600px');
+
+    var result_editor = CodeMirror.fromTextArea(document.getElementById("result"), {
+        lineNumbers: true,     // 显示行数
+        styleActiveLine: true, // 当前行背景高亮
+        mode: "markdown",
+        matchBrackets: true,
+        theme: "darcula",
+        lineWrapping:true,
+    });
+
+    result_editor.setSize('100%', '600px');
+
+</script>
+<script>
+    $(function () {
+        $("#connect").click(function () {
+            // alert(sql_editor.getValue())
+            $.ajax({
+                url: '/v1/connect',
+                type: 'POST',
+                data: {
+                    'dsn_url': $('#dsn_url').val(),
+                    'sql': sql_editor.getValue()
+                },
+                async: true,
+                dataType: 'json',
+                success: function (res) {
+                    result_editor.setValue(res.result);
+                },
+                error: function (res) {
+                    result_editor.setValue(res.result);
+                }
+
+            })
+        })
+    })
+</script>
+<script>
+    $(function () {
+        $("#fingerprint").click(function () {
+            $.ajax({
+                url: '/v1/fingerprint',
+                type: 'POST',
+                data: {
+                    'sql': sql_editor.getValue()
+                },
+                async: true,
+                dataType: 'json',
+                success: function (res) {
+                    result_editor.setValue(res.result);
+                },
+                error: function (res) {
+                    result_editor.setValue(res.result);
+                }
+            })
+        })
+    })
+</script>
+<script>
+    $(function () {
+        $("#beautify_sql").click(function () {
+            $.ajax({
+                url: '/v1/beautifysql',
+                type: 'POST',
+                data: {
+                    'sql': sql_editor.getValue()
+                },
+                async: true,
+                dataType: 'json',
+                success: function (res) {
+                    sql_editor.setValue(res.result);
+                },
+                error: function (res) {
+                    result_editor.setValue(res.result);
+                }
+            })
+        })
+    })
+</script>
+<script>
+    $(function () {
+        $("#syntax_check").click(function () {
+            $.ajax({
+                url: '/v1/syntax_check',
+                type: 'POST',
+                data: {
+                    'sql': sql_editor.getValue()
+                },
+                async: true,
+                dataType: 'json',
+                success: function (res) {
+                    result_editor.setValue(res.result);
+                },
+                error: function (res) {
+                    result_editor.setValue(res.result);
+                }
+            })
+        })
+    })
+</script>
+<script>
+    $(function () {
+        $("#merge_alter_sql").click(function () {
+            $.ajax({
+                url: '/v1/merge_alter',
+                type: 'POST',
+                data: {
+                    'sql': sql_editor.getValue()
+                },
+                async: true,
+                dataType: 'json',
+                success: function (res) {
+                    result_editor.setValue(res.result);
+                },
+                error: function (res) {
+                    result_editor.setValue(res.result);
+                }
+            })
+        })
+    })
+</script>
+<script>
+    $(function () {
+        $("#score").click(function () {
+            $.ajax({
+                url: '/v1/score',
+                type: 'POST',
+                data: {
+                    'sql': sql_editor.getValue()
+                },
+                async: true,
+                dataType: 'json',
+                success: function (res) {
+                    result_editor.setValue(res.result);
+                },
+                error: function (res) {
+                    result_editor.setValue(res.result);
+                }
+            })
+        })
+    })
+</script>
+
+
+</body>
+
+</html>
